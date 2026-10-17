@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drug interaction and allergy checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+  <aside class="sidebar" aria-label="Sidebar">
+    <p class="side-brand">Interaction checker</p>
+    <nav class="side-nav" role="tablist" aria-orientation="vertical" aria-label="Dashboard sections">
+      <button class="side-link" role="tab" id="tab-checker" aria-selected="true" aria-controls="view-checker" type="button">Checker</button>
+      <button class="side-link" role="tab" id="tab-lab" aria-selected="false" aria-controls="view-lab" tabindex="-1" type="button">How the Ribbon filter works</button>
+    </nav>
+    <div class="side-session" id="side-session"></div>
+    <p class="side-note"><strong>Learning project.</strong> Small hand-made dataset. Not medical advice.</p>
+  </aside>
+  <div class="page">
+
+    <header class="masthead">
+      <div>
+        <h1 class="masthead__title">Drug interaction and allergy checker</h1>
+        <p class="masthead__lead">Add the medicines you take and any allergies. The app shows each step it takes, from cleaning up names to a Ribbon filter lookup, so you can see how the answer was reached.</p>
+      </div>
+    </header>
+
+    <div id="load-error" class="load-error" role="alert" hidden></div>
+
+    <!-- ============ CHECKER ============ -->
+    <section id="view-checker" class="view" role="tabpanel" aria-labelledby="tab-checker">
+      <div class="layout">
+
+        <section class="panel" aria-labelledby="input-title">
+          <h2 id="input-title" class="panel__title">Your medicines and allergies</h2>
+
+          <form id="add-form" autocomplete="off">
+            <label class="field-label" for="drug-input">Add a medicine</label>
+            <div class="add-row">
+              <input id="drug-input" class="input" list="drug-list" placeholder="Try warfarin or Crocin" aria-describedby="input-hint" disabled>
+              <button class="btn btn--secondary" type="submit" id="add-btn" disabled>Add</button>
+            </div>
+            <datalist id="drug-list"></datalist>
+            <p id="input-hint" class="hint" role="status">Loading the dataset...</p>
+          </form>
+
+          <ul id="drug-chips" class="chips" aria-label="Medicines you added"></ul>
+
+          <div class="allergy-block">
+            <p class="field-label" id="allergy-label">Allergies</p>
+            <div id="allergy-chips" class="toggles" role="group" aria-labelledby="allergy-label"></div>
+            <div id="allergy-covers" class="covers"></div>
+          </div>
+
+          <div class="actions">
+            <button id="check-btn" class="btn btn--primary" type="button" disabled>Check my medicines</button>
+            <button id="example-btn" class="btn btn--secondary" type="button" disabled>Load an example</button>
+            <button id="clear-btn" class="btn btn--ghost" type="button">Clear all</button>
+          </div>
+        </section>
+
+        <div class="stack">
+          <section class="panel" aria-labelledby="process-title">
+            <div class="panel__head">
+              <h2 id="process-title" class="panel__title">What the app is doing</h2>
+              <button id="skip-btn" class="btn btn--ghost" type="button" hidden>Skip animation</button>
+            </div>
+            <ol id="process" class="process"></ol>
+          </section>
+
+          <section class="panel" aria-labelledby="results-title">
+            <h2 id="results-title" class="panel__title">Results</h2>
+            <div id="results" aria-live="polite"></div>
+          </section>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ RIBBON FILTER LAB ============ -->
+    <section id="view-lab" class="view" role="tabpanel" aria-labelledby="tab-lab" hidden>
+      <div class="lab">
+
+        <section class="panel" aria-labelledby="what-title">
+          <h2 id="what-title" class="panel__title">A Ribbon filter answers one question, very fast</h2>
+          <p class="prose">The question is: is this pair of medicines on the interaction list? The filter replies with one of two answers.</p>
+          <div class="answers">
+            <div class="answer answer--no">
+              <h3>Definitely not</h3>
+              <p>The pair is not on the list. The app stops here and skips the table lookup.</p>
+            </div>
+            <div class="answer answer--maybe">
+              <h3>Maybe</h3>
+              <p>The pair is probably on the list. The app confirms it in the full table.</p>
+            </div>
+          </div>
+          <p class="prose">It never says "definitely not" for a pair that is really on the list. Now and then it says "maybe" for a pair that is not. That is a false alarm, and the table lookup catches it before you see anything.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="how-title">
+          <h2 id="how-title" class="panel__title">How it works, in plain words</h2>
+          <p class="prose">Picture a doorman with no guest list, only a few coded notes. He can say "you are definitely not on the list" with certainty, or "you probably are". The coded notes are the Ribbon filter.</p>
+          <ol class="lab-steps">
+            <li class="lab-step"><h3>Every listed pair becomes an equation</h3><p>The pair's name is hashed three ways: where to start in a row of slots, which of the next 32 slots to use, and a short fingerprint. The rule is that the chosen slots, XORed together, must equal the fingerprint.</p></li>
+            <li class="lab-step"><h3>All equations are solved once</h3><p>Each equation touches only 32 neighbouring slots, so together they form a thin diagonal band, a ribbon. That makes solving fast. The pair names are then thrown away and only the solved slots stay.</p></li>
+            <li class="lab-step"><h3>A lookup repeats the sum</h3><p>Hash the pair again, XOR the same slots and compare. A listed pair always matches. An unlisted pair matches only by luck, about 1 time in 2<sup>r</sup> for an r-bit fingerprint.</p></li>
+          </ol>
+          <p class="prose" style="margin-top:16px">Good to know: the filter is built once and cannot be edited, so adding an interaction means rebuilding it. For a few hundred pairs a plain table is also quick. A filter pays off when the table is huge or far away.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="try-title">
+          <h2 id="try-title" class="panel__title">Try a lookup</h2>
+          <p class="prose">Pick two medicines and watch the filter work through its steps.</p>
+          <form id="lab-form" class="lab-form" autocomplete="off">
+            <div class="lab-form__field">
+              <label class="field-label" for="lab-a">Medicine A</label>
+              <input id="lab-a" class="input" list="drug-list" placeholder="warfarin" disabled>
+            </div>
+            <div class="lab-form__field">
+              <label class="field-label" for="lab-b">Medicine B</label>
+              <input id="lab-b" class="input" list="drug-list" placeholder="aspirin" disabled>
+            </div>
+            <button class="btn btn--primary" type="submit" id="lab-go" disabled>Look up</button>
+          </form>
+          <div id="lab-quick" class="quick" role="group" aria-label="Quick examples"></div>
+          <p id="lab-hint" class="hint" role="status"></p>
+          <div id="lab-output"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="build-title">
+          <h2 id="build-title" class="panel__title">How the filter is built</h2>
+          <div id="build-steps" class="build-steps" role="group" aria-label="Build steps"></div>
+          <div id="build-body" class="build-body" aria-live="polite"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="tune-title">
+          <h2 id="tune-title" class="panel__title">Change the fingerprint size</h2>
+          <p class="prose">A longer fingerprint means fewer false alarms but a bigger filter. Move the slider and the filter is rebuilt from the real dataset. A Bloom filter, the older and better known design, is built for the same false alarm rate so you can compare sizes.</p>
+          <div class="slider">
+            <label class="field-label" for="bits-range">Fingerprint size: <output id="bits-out">8</output> bits</label>
+            <input id="bits-range" type="range" min="4" max="12" step="1" value="8" disabled>
+          </div>
+          <div id="tune-output"></div>
+          <div id="tune-chart"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="where-title">
+          <h2 id="where-title" class="panel__title">Where it sits in this project</h2>
+          <div id="pipe-steps" class="pipe__steps" role="tablist" aria-label="Project pipeline"></div>
+          <div id="pipe-body" class="pipe__body" role="tabpanel" aria-live="polite"></div>
+          <div id="session-stats" class="session"></div>
+        </section>
+
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Dataset: hand-curated sample of well-known interactions, for learning only. Replace <code>data/interactions.json</code> with a licensed source such as DrugBank or DDInter to scale up.</p>
+    </footer>
+  </div>
+  </div>
+
+  <script src="ribbon/ribbon-filter.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
